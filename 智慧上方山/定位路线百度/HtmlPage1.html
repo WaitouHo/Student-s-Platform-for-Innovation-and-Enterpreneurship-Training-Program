@@ -1,0 +1,256 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <style type="text/css">
+        body, html {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            font-family: "微软雅黑";
+            font-size: 14px;
+        }
+
+        #l-map {
+            height: 650px;
+            width: 100%;
+        }
+
+        #r-result {
+            width: 100%;
+        }
+    </style>
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=dVmGQ3xHIsm0qryIr6DQFtCd0O1DWLaT"></script>
+    <!--<script type="text/JavaScript" src="/js/jquery-1.7.1.min.js"></script>-->
+
+    <script src="http://libs.baidu.com/jquery/1.9.0/jquery.js"></script>
+    <title>智慧山方山</title>
+</head>
+<body>
+    <div id="l-map"></div>
+    
+        <div id="r-result">
+            请输入景点:<input type="text" id="suggestId" size="20" value="" style="width:150px;" />
+
+            <div class="optionpanel">
+                <label>选择主题</label>
+                <select id="stylelist" onchange="changeMapStyle(this.value)"></select>
+            </div>
+
+        </div>
+        <div id="searchResultPanel" style="border:1px solid #C0C0C0;width:150px;height:auto; display:none;"></div>
+    
+    <audio controls autoplay>
+        <source src="http://cdn.ffkuaidu.com/fastread/audio/fca6609379904d9d989bf26e6bae233a.mp3"  type="audio/mp3" />
+    </audio> 
+
+
+</body>
+</html>
+<script type="text/javascript" src="http://lbsyun.baidu.com/custom/stylelist.js"></script>
+<script type="text/javascript">
+
+
+    //初始化模板选择的下拉框
+    var sel = document.getElementById('stylelist');
+    for (var key in mapstyles) {
+        var style = mapstyles[key];
+        var item = new Option(style.title, key);
+        sel.options.add(item);
+    }
+
+
+    // 百度地图API功能
+	function G(id) {
+		return document.getElementById(id);
+	}
+
+	var map = new BMap.Map("l-map");
+	map.centerAndZoom(new BMap.Point(115.83208, 39.680012),16);  // 初始化地图,设置中心点坐标和地图级别
+	map.addControl(new BMap.MapTypeControl());   //添加地图类型控件
+	map.setCurrentCity("北京");          // 设置地图显示的城市 
+	map.enableScrollWheelZoom(true);     //开启鼠标滚轮缩放
+	map.disable3DBuilding();
+	
+    //改变风格
+	changeMapStyle('normal')
+	sel.value = 'normal';
+
+
+	function changeMapStyle(style) {
+	    map.setMapStyle({ style: style });
+	    $('#desc').html(mapstyles[style].desc);
+	}
+
+
+	//var start = new BMap.Point(115.83208, 39.680012);  //上方山国家森林公园
+	//var marker = new BMap.Marker(start);  // 创建标注
+	//map.addOverlay(marker);               // 将标注添加到地图中
+	//marker.setAnimation(BMAP_ANIMATION_BOUNCE); //跳动的动画
+
+    
+    //添加小黄车停靠点
+    
+    var myIcon = new BMap.Icon("http://lbsyun.baidu.com/jsdemo/img/Mario.png", new BMap.Size(125,125));
+	var json_data = [
+        [115.833627, 39.676837]
+        [115.833986, 39.677975]
+        [115.834575, 39.677965]
+        [115.833569, 39.679902]
+        [115.833569, 39.679902]
+        [115.833569, 39.679902]
+        [115.833569, 39.679902]
+        [115.833569, 39.679902]
+        [115.833569, 39.679902]
+        [115.833569, 39.679902]
+        [115.833569, 39.679902]
+        [115.833569, 39.679902]
+        [115.833569, 39.679902]
+
+	];
+	var name = [
+        ["地藏王"]
+        ["山神庙"]
+        ["云梯庵"]
+        ["华严洞"]
+        ["兜率寺"]
+        ["塔院"]
+        ["槐树王"]
+        ["观音殿"]
+        ["骆驼峰"]
+        ["云水洞"]
+        ["旱龙潭"]
+        ["钟鼓楼"]
+        ["藏经阁"]
+	];
+	var pointArray = new Array();
+	for (var i = 0; i < json_data.length; i++) {
+	    var marker = new BMap.Marker(new BMap.Point(json_data[i][0], json_data[i][1]), { icon: myIcon }); // 创建点
+	    map.addOverlay(marker);    //增加点
+        //文字标注
+	    var label = new BMap.Label(name[i], { offset: new BMap.Size(0, 0) });
+	    marker.setLabel(label);
+	    pointArray[i] = new BMap.Point(json_data[i][0], json_data[i][1]);
+	   
+	}
+	//让所有点在视野范围内
+	map.setViewport(pointArray);
+    
+
+	var ac = new BMap.Autocomplete(    //建立一个自动完成的对象
+		{"input" : "suggestId"
+		,"location" : map
+	});
+
+	ac.addEventListener("onhighlight", function(e) {  //鼠标放在下拉列表上的事件
+	var str = "";
+		var _value = e.fromitem.value;
+		var value = "";
+		if (e.fromitem.index > -1) {
+			value = _value.province +  _value.city +  _value.district +  _value.street +  _value.business;
+		}
+		str = "FromItem<br />index = " + e.fromitem.index + "<br />value = " + value;
+
+		value = "";
+		if (e.toitem.index > -1) {
+			_value = e.toitem.value;
+			value = _value.province +  _value.city +  _value.district +  _value.street +  _value.business;
+		}
+		str += "<br />ToItem<br />index = " + e.toitem.index + "<br />value = " + value;
+		G("searchResultPanel").innerHTML = str;
+	});
+
+	var myValue;
+	ac.addEventListener("onconfirm", function(e) {    //鼠标点击下拉列表后的事件
+	var _value = e.item.value;
+		myValue = _value.province +  _value.city +  _value.district +  _value.street +  _value.business;
+		G("searchResultPanel").innerHTML ="onconfirm<br />index = " + e.item.index + "<br />myValue = " + myValue;
+
+		setPlace();
+	});
+
+	var temp;
+	function setPlace(){
+		//map.clearOverlays();    //清除地图上所有覆盖物
+		function myFun(){
+			var pp = local.getResults().getPoi(0).point;    //获取第一个智能搜索的结果
+			map.centerAndZoom(pp, 18);
+			map.addOverlay(new BMap.Marker(pp));    //添加标注
+		}
+		var local = new BMap.LocalSearch(map, { //智能搜索
+		    onSearchComplete: myFun
+		});
+		local.search(myValue);
+
+
+		 temp = $('#suggestId').val();//获取值
+		//alert(temp);
+	}
+
+
+
+    //单击获取      小黄车停靠点         的经纬度，并规划显示路线
+	var lng;
+	var lat;
+	map.addEventListener("click", function (e) {
+	    lng = e.point.lng;
+	    lat = e.point.lat;
+	    // alert(e.point.lng + "," + e.point.lat);
+
+	    //规划路线
+	    var p1 = new BMap.Point(115.83208, 39.680012);//起点：上方山国家森林公园
+	    var p2 = new BMap.Point(lng, lat);//终点
+
+
+	    var driving = new BMap.DrivingRoute(map, {
+	        renderOptions: {
+	            map: map, panel: "r-result", autoViewport: true, //拖拽   enableDragging: true
+	        }
+	    });
+	    driving.search(p1, temp, { waypoints: [p2] });
+
+        //
+        //
+
+
+                //
+	    var myIcon = new BMap.Icon("http://image.baidu.com/search/detail?ct=503316480&z=0&ipn=d&word=xiaohuangche&step_word=&hs=0&pn=681&spn=0&di=137409065751&pi=0&rn=1&tn=baiduimagedetail&is=0%2C0&istype=0&ie=utf-8&oe=utf-8&in=&cl=2&lm=-1&st=undefined&cs=717069503%2C2145078165&os=1366806386%2C3722656744&simid=0%2C0&adpicid=0&lpn=0&ln=1968&fr=&fmq=1499243787116_R&fm=&ic=undefined&s=undefined&se=&sme=&tab=0&width=undefined&height=undefined&face=undefined&ist=&jit=&cg=&bdtype=0&oriquery=&objurl=http%3A%2F%2Fpubalifr.sojump.com%2F13263304%2F1491879885Rd86fe.jpg&fromurl=ippr_z2C%24qAzdH3FAzdH3Fooo_z%26e3Bf5374r_z%26e3Bv54AzdH3F3qAzdH3F8ndmnna9_z%26e3Bwfrx&gsm=276&rpstart=0&rpnum=0", new BMap.Size(32, 70), {    //小车图片
+	        //offset: new BMap.Size(0, -5),    //相当于CSS精灵
+	        imageOffset: new BMap.Size(0, 0)    //图片的偏移量。为了是图片底部中心对准坐标点。
+	    });
+	    window.run = function () {
+	        var driving = new BMap.DrivingRoute(map);    //驾车实例
+	        driving.search(p1, temp, { waypoints: [p2] });
+	        driving.setSearchCompleteCallback(function () {
+	            var pts = driving.getResults().getPlan(0).getRoute(0).getPath();    //通过驾车实例，获得一系列点的数组
+	            var paths = pts.length;    //获得有几个点
+
+	            var carMk = new BMap.Marker(pts[0], { icon: myIcon });
+	            map.addOverlay(carMk);
+	            i = 0;
+	            function resetMkPoint(i) {
+	                carMk.setPosition(pts[i]);
+	                if (i < paths) {
+	                    setTimeout(function () {
+	                        i++;
+	                        resetMkPoint(i);
+	                    }, 100);
+	                }
+	            }
+	            setTimeout(function () {
+	                resetMkPoint(5);
+	            }, 100)
+
+	        });
+	    }
+
+	    setTimeout(function () {
+	        run();
+	    }, 1500);
+        //
+    });
+	
+
+
+</script>
